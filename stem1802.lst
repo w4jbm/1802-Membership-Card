@@ -1,0 +1,489 @@
+                        ; 1802 Membership Card Demo Programs
+                        ;
+                        ; Hacked together by James McClanahan, W4JBM
+                        ;
+                        ; Assembles with Herb Johnson's version of William Colley's A18
+                        ; assembler:
+                        ;
+                        ;     $ a18 stem1802.a18 -l stem1802.lst -o stem1802.hex
+                        ;
+                        ; These small programs are designed to set in EPROM above the
+                        ; monitor and BASIC to allow quick demos primarily making use
+                        ; of the LEDs and Switches of the 1802 Membership Card.
+                        ;
+                        ; A routine to transfer these down to Page Zero is also include
+                        ; to allow experimentation and exploration.
+                        ;
+                        ; None of this work is particularly original and definitely builds
+                        ; from a foundation laid by others. Special thanks to...
+                        ;
+                        ; Lee Hart for making the 1802 Membership Card available.
+                        ; Herb Johnson for the RAM/ROM and serial upgrade kits.
+                        ; Chuck Yakym for his solid serial monitor + Tiny BASIC EPROM images.
+                        ; Marcel van Tongeren for the Emma 02 emulator used for testing.
+                        ;
+                        ; The 1802 Membership Card definitely can play a role in helping
+                        ; "kids of all ages, including fifty and up" explore aspects related
+                        ; to Science, Technology, Engineering, and Math (STEM).
+                        ;
+                        ; This code is released under the MIT License and may be freely used,
+                        ; modified, and distributed. You are encouraged to share any additions,
+                        ; enhancements, and such.
+                        ;
+                        ;
+                        ;
+                        ; starting memory location of these routines
+                        ;
+   ff00                 STPROG      EQU $FF00       ; Starting Address
+   00ff                 STPGHI      EQU $FF         ; High Byte
+   0000                 STPGLO      EQU $00         ; Low Byte
+                        ;
+                        ; change start address as follows to allow testing in RAM
+                        ; note that the copy routine will only copy 127 bytes in
+                        ; this case
+                        ;
+                        ;STPROG    EQU  $7F00       ; Starting Address in RAM
+                        ;STPGHI    EQU  $7F         ; High Byte
+                        ;STPGLO    EQU  $00         ; Low Byte
+                        ;
+                        
+                        ;
+                        ; Register Definitions:
+                        ;
+   0000                 R0          EQU 0
+   0001                 R1          EQU 1
+   0002                 R2          EQU 2
+   0003                 R3          EQU 3
+   0004                 R4          EQU 4
+   0005                 R5          EQU 5
+   0006                 R6          EQU 6
+   0007                 R7          EQU 7
+   0008                 R8          EQU 8
+   0009                 R9          EQU 9
+   000a                 R10         EQU 10
+   000b                 R11         EQU 11
+   000c                 R12         EQU 12
+   000d                 R13         EQU 13
+   000e                 R14         EQU 14
+   000f                 R15         EQU 15
+                        
+                        ;
+                        ; I/O Port Definitions:
+                        ;
+   0001                 P1		EQU	1
+   0002                 P2		EQU	2
+   0003                 P3		EQU	3
+   0004                 P4		EQU	4
+   0005                 P5		EQU	5
+   0006                 P6		EQU	6
+   0007                 P7		EQU	7
+                        
+                        ;
+                        ;
+                        ;
+                        ; Set starting location to Page $FF
+                        ;
+   ff00                 START:      ORG STPROG
+                        ;
+                        ;
+                        ;
+                        ; Branch to ROM Monitor Cold Start
+                        ;
+   ff00   c0 80 00      CLDSTRT:    LBR $8000       ; long branch to start monitor
+                        ;
+                        ; This is primarily here so that if the contents of ROM at F0xxH
+                        ; are copied to page zero at 00xxH, the monitor cold start will
+                        ; be at address $0000.
+                        ;
+   ff03   00                        IDL
+                        ;
+                        ;
+                        ; Some sections of code have "Learning Exercises" associated with
+                        ; them. This assumes that the routines have been copied down to
+                        ; page zero.
+                        ;
+                        ; The goal was to give some "practical" but easy examples of how
+                        ; the code could be modified to allow a "hands-on" demonstration
+                        ; for anyone interested in trying them.
+                        ;
+                        ; LEARNING:
+                        ;
+                        ; Once the routines are loaded to Page Zero, you will probably want
+                        ; to modify this jump to point to the routine you want to work with.
+                        ; For example, this should be $C0 $00 $20 to jump to the "Mimic
+                        ; Switches" routine.
+                        ;
+                        ; For someone wanting to dig a bit deeper, you might also want to
+                        ; explain the different between "little endian" such as the 1802 and
+                        ; 68000 use and "little endian" (where the address bytes are reversed)
+                        ; such as the Intel x86, 6502,and Z80 use. For example, the equivalent
+                        ; instruction on a 6502 would assemble to something like:
+                        ;
+                        ;   Hex     Assembler  Comments
+                        ; --------  ---------  ---------------
+                        ; 4C 00 80  JMP $8000  ; jump to $8000
+                        ;
+                        ; As a "bonus question", discuss how operating systems (such as Unix)
+                        ; that might run on both types of systems might encounter issues with
+                        ; dealing with this. (This is sometimes called the "nUxi" problem.
+                        ; The PDP-11 was the first machine Unix was developed on and uses
+                        ; a mix of big endian and little endian (called, appropriately enough,
+                        ; "mixed-endian"). When Unix was ported to the IBM System/1 (which uses
+                        ; big-endian), it caused the bytes in the words containing "Un" and "ix"
+                        ; to be "flipped" (to "nU" and "xi") and the system printed "nUxi" instead
+                        ; printing "Unix" early in the porting process.
+                        ;
+                        ;
+                        ;
+                        ; The following helps quickly find the routine you want to look at or
+                        ; edit once they are loaded to page zero. All LEDs will blank until
+                        ; just prior to the next segment of code. Then they will, in sequence,
+                        ; all light, display the lower byte of the address, and then all light
+                        ; a second time. The byte following that is the first byte of the
+                        ; code.
+                        ;
+   ff04   00 00 00                  DB 0,0,0
+   ff07   00 00 00                  DB 0,0,0
+   ff0a   00 00 00                  DB 0,0,0
+   ff0d   00 00 00                  DB 0,0,0
+   ff10   00 00 00                  DB 0,0,0
+   ff13   00 00 00                  DB 0,0,0
+   ff16   00 00 00                  DB 0,0,0
+   ff19   00 00 00                  DB 0,0,0
+   ff1c   00                        DB 0
+   ff1d   ff 20 ff                  DB $FF,$20,$FF
+                        ;
+                        ;
+                        ;
+                        ; Mimic Switches (echo to LEDs)
+                        ;
+                        ; Uses $7FFF as a scratch pad memory location
+                        ;
+   ff20   f8 7f         MIMIC:      LDI $7F         ; load high byte of scratch pad
+   ff22   b3                        PHI R3          ; and put in high portion of R3
+   ff23   f8 ff                     LDI $FF         ; load low byte of scratch pad
+   ff25   a3                        PLO R3          ; and put in low portion of R3
+                        ;
+                        ; R3 now points to $7FFF which is the RAM address used for
+                        ; scratch pad memory
+                        ;
+   ff26   e3                        SEX R3          ; Set X to point to R3
+                        ;
+                        ; X tells the 1803 which register to use to point to memory
+                        ;
+   ff27   6c                        INP P4           ; read switch status
+                        ;
+                        ; BEWARE: The INP instruction places the input value in
+                        ;         both the accumulator and the memory location
+                        ;         pointed to by Register x (R3 in this case)
+                        ;
+   ff28   64                        OUT P4          ; write to LEDs
+                        ;
+                        ; BEWARE: The OUT instruction also increments value at R3
+                        ;         we don't really need to decrement it, but why not?
+                        ;         (if this code is reused, this might save a headache)
+                        ;
+   ff29   23                        DEC R3          ; restore R3
+   ff2a   30 20                     BR  MIMIC       ; loop back to the start
+                        ;
+                        ;
+                        ;
+                        ; Some sections of code have "Learning Exercises" associated with
+                        ; them. This assumes that the routines have been copied down to
+                        ; page zero.
+                        ;
+                        ; The goal was to give some "practical" but easy examples of how
+                        ; the code could be modified to allow a "hands-on" demonstration
+                        ; for anyone interested in trying them.
+                        ;
+                        ; LEARNING:
+                        ;
+                        ; The "scratch pad" memory location is pointed to with the high
+                        ; byte at $7F and the low byte at $FF. You could move this to
+                        ; something like $0010 and then after a reset you should see the
+                        ; last switch positions displayed by advancing the built in monitor
+                        ; to $0010. You could even use $0000 to make it easier, but that
+                        ; will clobber the jump instruction located there.
+                        ;
+   ff2c   00 00 00                  DB 0,0,0
+   ff2f   00 00 00                  DB 0,0,0
+   ff32   00 00 00                  DB 0,0,0
+   ff35   00 00 00                  DB 0,0,0
+   ff38   00 00 00                  DB 0,0,0
+   ff3b   00 00                     DB 0,0
+   ff3d   ff 40 ff                  DB $FF,$40,$FF
+                        ;
+                        ;
+                        ;
+                        ; Mimic XOR (inverted) Switches (to LEDs)
+                        ;
+                        ; Uses $7FFF as a scratch pad memory location
+                        ;
+   ff40   f8 7f         XMIMIC:     LDI $7F         ; load high byte of scratch pad
+   ff42   b3                        PHI R3          ; and put in high portion of R3
+   ff43   f8 ff                     LDI $FF         ; load low byte of scratch pad
+   ff45   a3                        PLO R3          ; and put in low portion of R3
+                        ;
+                        ; R3 now points to $7FFF
+                        ;
+   ff46   e3                        SEX R3          ; Set X to point to R3
+                        ;
+                        ; X tells the 1803 which register to use to point to memory
+                        ;
+   ff47   6c                        INP P4          ; read switch status
+   ff48   fb ff                     XRI $FF         ; XOR to flip all bits
+   ff4a   53                        STR R3          ; store
+   ff4b   64                        OUT P4          ; write to LEDs
+   ff4c   23                        DEC R3          ; undo increment from OTU
+   ff4d   30 40                     BR  XMIMIC      ; loop back to the start
+                        ;
+                        ;
+                        ;
+                        ; LEARNING:
+                        ;
+                        ; The value the input switches is XORed with is at $0049/$FF49. If that
+                        ; value is changed from $FF to $00, the LEDs will display the value
+                        ; of the switches without inverting them.
+                        ;
+                        ; For those wanting to explore a bit deeper, you may want to discuss
+                        ; the XOR function.
+                        ;
+                        ; Also, values like 0FH or F0H will cause half the LEDs to display
+                        ; the opposite value from the switch while the other half of the
+                        ; LEDs to match the value from the switch.
+                        ;
+                        ; As a "bonus question", set the value to something like $AA, $55, or
+                        ; even some random value and let the user play with the switches to
+                        ; determine the XOR mask that is in use.
+                        ;
+   ff4f   00 00 00                  DB 0,0,0
+   ff52   00 00 00                  DB 0,0,0
+   ff55   00 00 00                  DB 0,0,0
+   ff58   00 00 00                  DB 0,0,0
+   ff5b   00 00                     DB 0,0
+   ff5d   ff 60 ff                  DB $FF,$60,$FF
+                        ;
+                        ;
+                        ;
+                        ; Slow Flash of Q LED
+                        ;
+                        ; Allows the use of the switches to control the speed
+                        ; at which the LED flashes
+                        ;
+   ff60   7a            SFLSHQ:     REQ             ; reset Q
+   ff61   f8 7f                     LDI $7F         ; load high byte of scratch pad
+   ff63   b3                        PHI R3          ; and put in high portion of R3
+   ff64   f8 ff                     LDI $FF         ; load low byte of scratch pad
+   ff66   a3                        PLO R3          ; and put in low portion of R3
+                        ;
+                        ; R3 now points to $7FFF
+                        ;
+   ff67   e3                        SEX R3          ; Set X to point to R3
+                        ;
+                        ; X tells the 1803 which register to use to point to memory
+                        ;
+   ff68   6c            FLOOP1:     INP P4          ; read switch status
+   ff69   53                        STR R3          ; store the results and then
+   ff6a   64                        OUT P4          ; show the value on the LEDs
+   ff6b   23                        DEC R3          ; undo OUT's increment
+   ff6c   b1                        PHI R1          ; push switch value into hi byte of R1
+   ff6d   21            FLOOP2:     DEC R1          ; count down in R1 as timer
+   ff6e   91                        GHI R1          ; load the hi byte of R1 for test
+   ff6f   3a 6d                     BNZ FLOOP2      ; if not zero, branch to loop 2
+   ff71   31 60                     BQ  SFLSHQ      ; if Q set, jump to start and reset
+   ff73   7b                        SEQ             ; otherwise, set Q
+   ff74   30 68                     BR  FLOOP1      ; then read switch and count again
+                        ;
+                        ; note that the switches are only read when the routine jumps to SFSHQ
+                        ; which will be the transition from Q set to Q reset during normal
+                        ; operation
+                        ;
+                        ;
+                        ;
+                        ; LEARNING:
+                        ;
+                        ; Counting the "pulses per second" (pps) can be a way to measure speed.
+                        ;
+                        ; From the perspective of learning about binary numbers, you should be
+                        ; able to perform exercises like setting the switches to $80 and then
+                        ; $40 and see the number of pulses double.
+                        ;
+                        ; Faster operation would be possible by pushing the countdown value
+                        ; into R1's low byte and then getting and testing it. With the 1802
+                        ; operating at around 1.8 MHz, this is likely to be faster than can
+                        ; be counted by the eye.
+                        ;
+                        ; As a "bonus question", if you measure the pps at $80 and $40, can
+                        ; you calculate the approximate pps for $C0?
+                        ;
+                        ; Also, in looking at the code can you highlight which portion is fixed
+                        ; "overhead" that will take the same amount of time to run no matter
+                        ; what position the switches are in versus the portion of the code that
+                        ; actually varies based on the setting?
+                        ;
+                        ; Another "bonus question" if a terminal is connected to the serial
+                        ; output of the Membership Card computer... Q is used as the output for
+                        ; the serial port. Can you find switch settings that "spoof" the
+                        ; terminal into thinking it is seeing serial data?
+                        ;
+                        ; If you are able to spoof the serial device, you will likely see the
+                        ; letter "U". Knowing the U has the ASCII code of 85 decimal ($55),
+                        ; can you explain why it would show up frequently?
+                        ;
+   ff76   00 00 00                  DB 0,0,0
+   ff79   00 00 00                  DB 0,0,0
+   ff7c   00                        DB 0
+   ff7d   ff 80 ff                  DB $FF,$80,$FF
+                        ;
+                        ;
+                        ;
+                        ; Scan LEDs Left to Right
+                        ;
+   ff80   f8 7f         SCANRL:     LDI $7F         ; load high byte of scratch pad
+   ff82   b3                        PHI R3          ; and put in high portion of R3
+   ff83   f8 ff                     LDI $FF         ; load low byte of scratch pad
+   ff85   a3                        PLO R3          ; and put in low portion of R3
+                        ;
+                        ; R3 now point to $7FFF
+                        ;
+   ff86   e3                        SEX R3          ; Set X to point to R3
+                        ;
+                        ; X tells the 1803 which register to use to point to memory
+                        ;
+   ff87   f8 80         SLOOP1:     LDI $80         ; start with bit 7 set
+   ff89   53            SLOOP2:     STR R3          ; store the results
+   ff8a   64                        OUT P4          ; show it on the LEDs
+   ff8b   23                        DEC R3          ; undo OUT's increment
+   ff8c   f8 10                     LDI $10         ; load delay count (adjusts speed)
+   ff8e   b1                        PHI R1          ; put in hi byte of R1
+   ff8f   21            SLOOP3:     DEC R1          ; count down in R1
+   ff90   91                        GHI R1          ; load the hi byte of R1
+   ff91   3a 8f                     BNZ SLOOP3      ; if not zero, branch to loop 3
+   ff93   03                        LDN R3          ; load current value
+   ff94   f6                        SHR             ; shift right
+   ff95   3a 89                     BNZ SLOOP2      ; if not zero, branch to loop 2
+   ff97   30 87                     BR  SLOOP1      ; otherwise, start over
+                        ;
+                        ;
+                        ;
+                        ; LEARNING
+                        ;
+                        ; Try changing the pre-loaded number at location $0088/$FF88 from
+                        ; $80 to $FF and see what happens.
+                        ;
+                        ; Try different values in the countdown timer at $008D/$FF8D from
+                        ; $10 and see what happens. Probably the best way to "measure"
+                        ; the speed is using something like "scans per second" where
+                        ; one scan is completed and the next begins. Covering all of
+                        ; the LEDs except one can make this easier to count.
+                        ;
+                        ; Can you change the program it scans the opposite direction?
+                        ; Hint: The SHL (shift left) instruction is $FE.
+                        ;
+   ff99   00 00 00                  DB 0,0,0
+   ff9c   00                        DB 0
+   ff9d   ff a0 ff                  DB $FF,$A0,$FF
+                        ;
+                        ;
+                        ;
+                        ;
+                        ; Copy $FFxx to $00xx
+                        ;
+                        ; To allow for easy manipulation of the above routines by putting them
+                        ; down in RAM starting at $0000.
+                        ;
+                        ; Note: This copies 255 ($FF) bytes because that was an easy number to
+                        ; load into R6 (the counter). It only checks for the low byte of R6
+                        ; to count down to zero. This routine is based on code from Ipso Facto
+                        ; #7. That routine includes counting and testing using the high byte
+                        ; of R6 (as well as a routine for entering values).
+                        ;
+   ffa0   f8 ff         MCOPY:      LDI STPGHI      ; use $FF for various things
+   ffa2   b4                        PHI R4          ; upper byte of R4 is "from" page
+   ffa3   a6                        PLO R6          ; lower byte of R6 is the number
+                                                    ; of bytes to transfer
+                                                    ;
+                                                    ; using 255 saves having to LDI
+                                                    ; another value
+                                                    ;
+   ffa4   f8 00                     LDI STPGLO      ; use $00 for various things
+   ffa6   a4                        PLO R4          ; zero lower bye of R4
+   ffa7   b5                        PHI R5          ; upper byte of R5 is "to" page
+   ffa8   a5                        PLO R5          ; zero lower bye of R5
+   ffa9   b6                        PHI R6          ; zero upper byte of R6
+                        ;
+   ffaa   7a                        REQ             ; reset Q to show we are working
+                        ;
+   ffab   44            DOCOPY:     LDA R4          ; load D and increment R4
+   ffac   55                        STR R5          ; push data to new location pointed
+                                                    ; to by R5
+   ffad   15                        INC R5          ; and increment R5 for next pass
+   ffae   26                        DEC R6          ; decrement bytes left to copy count
+   ffaf   86                        GLO R6          ; check how much is left to copy
+   ffb0   3a ab                     BNZ DOCOPY      ; as long as not zero, continue
+   ffb2   7b                        SEQ             ; set Q to show we are done
+   ffb3   00                        IDL             ; and stop
+                        ;
+                        ;
+                        ;
+                        ; LEARNING
+                        ;
+                        ; This segment was streamlined to fit into less than 32 bytes, but
+                        ; adding logic to handle different a different source address,
+                        ; destination address, or byte count to copy is fairly easy.
+                        ;
+                        ; Another possible change that might be reasonable to implement is to
+                        ; replace the read from a source address and hard code a value to be
+                        ; pushed to the destination location. In effect, this would turn the
+                        ; code into a "fill" command.
+                        ;
+                        ;
+                        ;
+                        ; ADDITIONAL LEARNING
+                        ;
+                        ; FURTHER RESEARCH: The 1802 microprocessor was used in several
+                        ;                   satellites. Can you name them and explain why
+                        ;                   the 1802 was used and the differences between
+                        ;                   the ones used and the one in the Membership Card?
+                        ;
+                        ;
+                        ;
+                        ; The code below "points" to C0H in a manner consistent with the other
+                        ; code segments and could be used for user programs if desired
+                        ;
+                        ;
+   ffb4   00 00 00                  DB 0,0,0
+   ffb7   00 00 00                  DB 0,0,0
+   ffba   00 00 00                  DB 0,0,0
+   ffbd   ff c0 ff                  DB $FF,$C0,$FF
+                        ;
+                        ;
+                        ;
+                        ; And we still have 64 bytes left in the page...
+                        ;
+   ffc0   00 00 00                  DB 0,0,0
+   ffc3   00 00 00                  DB 0,0,0
+   ffc6   00 00 00                  DB 0,0,0
+   ffc9   00 00 00                  DB 0,0,0
+   ffcc   00 00 00                  DB 0,0,0
+   ffcf   00 00 00                  DB 0,0,0
+   ffd2   00 00 00                  DB 0,0,0
+   ffd5   00 00 00                  DB 0,0,0
+   ffd8   00 00 00                  DB 0,0,0
+   ffdb   00 00 00                  DB 0,0,0
+   ffde   00 00                     DB 0,0
+                        ;
+                        ;
+                        ;
+   ffe0                             END
+ff00  CLDSTRT       ffab  DOCOPY        ff68  FLOOP1        ff6d  FLOOP2    
+ffa0  MCOPY         ff20  MIMIC         0001  P1            0002  P2        
+0003  P3            0004  P4            0005  P5            0006  P6        
+0007  P7            0000  R0            0001  R1            000a  R10       
+000b  R11           000c  R12           000d  R13           000e  R14       
+000f  R15           0002  R2            0003  R3            0004  R4        
+0005  R5            0006  R6            0007  R7            0008  R8        
+0009  R9            ff80  SCANRL        ff60  SFLSHQ        ff87  SLOOP1    
+ff89  SLOOP2        ff8f  SLOOP3        ff00  START         00ff  STPGHI    
+0000  STPGLO        ff00  STPROG        ff40  XMIMIC        
+
