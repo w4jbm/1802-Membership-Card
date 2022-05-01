@@ -1,6 +1,6 @@
 # 1802-Membership-Card-STEM-Lessons
 
-This project need to be revisited and the source code is out of synch with the assembly listing and the Intel Hex file. I need to find an 1802 assembler that works under Linux.
+This project need to be revisited and the source code is out of synch with the assembly listing and the Intel Hex file. I have moved it to Herb Johnson's version of William Colley's [A18 Assembler](http://www.retrotechnology.com/memship/a18.html).
 
 ## Background
 
@@ -28,11 +28,18 @@ This was two evenings of work while on a business trip and using Marcel van Tong
 
 ## How do I really use this?
 
-I originally located the code at $F000 and later to $FF00. It fits in a single page of memory and I loaded it into the top of the ROM image for the 1802 Membership Card. That was a few years ago and another thing on my to-do list is to upgrade the ROM in my machine and see if there is still room at the top for this.
+I originally located the code at $F000 and later to $FF00. It fits in a single page (256 bytes) of memory with room left over and I loaded it into the top of the ROM image for the 1802 Membership Card. That was a few years ago and another thing on my to-do list is to upgrade the ROM in my machine and see if there is still room at the top for this.
 
 All of the examples are short enough to be hand-loaded using the toggle switches if needed. If you have the code in ROM, there is a "relocator" that you can jump to that will move them down to RAM where they can be examined and tweaked.
 
-This does assume the system has RAM in the lower part of memory and ROM in the upper part.
+This does assume the system has RAM in the lower part of memory (including the use of some scratchpad RAM at $7FFF) and ROM in the upper part.
+
+
+## What can I do with it?
+
+Pretty much anything you want. It is released under the MIT license and I am also happy to share it under other licenses if needed.
+
+I would be interested in hearing about any use, but beyond that I am basically turning this loose into the wild.
 
 
 ## License
