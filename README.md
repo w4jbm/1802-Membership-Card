@@ -10,7 +10,7 @@ She asked two questions...
 
 The first was whether a 14 or 15 year old could assemble the kit? Although it isn't a beginners kit, I believe I could have built it at that age. I did recommend looking at some of the low-cost kits designed to help get some soldering experience as a first step for anyone who hadn't build something before.
 
-The second question was a bit toughter. What would they really learn with this? Granted, the lights and switches would probably grab their attention, but if she had to set some specific learning objectives, what would they be?
+The second question was a bit tougher. What would they really learn with this? Granted, the lights and switches would probably grab their attention, but if she had to set some specific learning objectives, what would they be?
 
 So I wrote this up as a first pass. The answer to her question is largely in the assembly source, but here is a quick list:
 
@@ -23,7 +23,7 @@ So I wrote this up as a first pass. The answer to her question is largely in the
 - On an 8-bit system, what is a "page" of memory?
 - What is the difference between RAM and ROM?
 
-This was two evenings of work while on a business trip and using Marcel van Tongeren's excellen [Emma 02](https://www.emma02.hobby-site.com/) emulator.
+This was two evenings of work while on a business trip and using Marcel van Tongeren's excellent [Emma 02](https://www.emma02.hobby-site.com/) emulator.
 
 
 ## How do I really use this?
@@ -33,6 +33,12 @@ I originally located the code at $F000 and later to $FF00. It fits in a single p
 All of the examples are short enough to be hand-loaded using the toggle switches if needed. If you have the code in ROM, there is a "relocator" that you can jump to that will move them down to RAM where they can be examined and tweaked.
 
 This does assume the system has RAM in the lower part of memory (including the use of some scratchpad RAM at $7FFF) and ROM in the upper part.
+
+## Build Tools
+
+I have included the version of Herb's zipped source code for the A18 Assembler here just in case it is needed. It can be built in Linux with:
+
+`gcc -o a18 a18.c a18eval.c a18util.c`
 
 
 ## What can I do with it?
